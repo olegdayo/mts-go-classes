@@ -1,0 +1,11 @@
+# Removing binaries
+*.o
+
+# Removing builds
+build/
+target/
+
+# Other stuff
+.DS_Store
+.vscode/
+.idea/
