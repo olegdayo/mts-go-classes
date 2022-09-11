@@ -15,7 +15,7 @@ type Config struct {
 }
 
 func (c *Config) Init() error {
-	bytes, err := ioutil.ReadFile("config.yaml")
+	bytes, err := ioutil.ReadFile("config/config.yaml")
 	if err != nil {
 		return err
 	}

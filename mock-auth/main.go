@@ -16,7 +16,7 @@ func init() {
 	conf = new(config.Config)
 	err := conf.Init()
 	if err != nil {
-		log.Fatalf("Config error: %s", err.Error())
+		log.Fatalf("Config error: %s\n", err.Error())
 	}
 }
 
@@ -33,6 +33,6 @@ func main() {
 	err := s.Shutdown(shutdownCtx)
 
 	if err != nil {
-		log.Fatalf("Server shutdown error: %s", err.Error())
+		log.Fatalf("Server shutdown error: %s\n", err.Error())
 	}
 }

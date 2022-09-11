@@ -30,6 +30,6 @@ func setRouter() *chi.Mux {
 func (server *Server) Start() {
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Fatalf("Server running error: %s", err.Error())
+		log.Fatalf("Server running error: %s\n", err.Error())
 	}
 }
