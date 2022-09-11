@@ -5,6 +5,7 @@ import (
 	"log"
 	"mock-auth/config"
 	"mock-auth/server"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -22,12 +23,15 @@ func init() {
 
 func main() {
 	s := server.NewServer(conf.Server.Port)
-	ctx, _ := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	serverClose := make(chan os.Signal)
+	signal.Notify(serverClose, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
 	go s.Start()
-	<-ctx.Done()
+	log.Println("Server start")
+	<-serverClose
+	log.Println("Server stop")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	err := s.Shutdown(shutdownCtx)
