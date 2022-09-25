@@ -1,7 +1,5 @@
-.PHONY: run
 run:
-	go run cmd/auth
+	go run cmd
 
-.PHONY: build
 build:
-	go build -o bot cmd/auth
+	go build -o app cmd

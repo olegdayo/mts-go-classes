@@ -1,0 +1,7 @@
+version: '3.6'
+
+services:
+  auth:
+    build: ./cmd/auth
+    ports:
+      - "8080:8080"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/offluck/mts-go-classes/config"
+	"github.com/offluck/mts-go-classes/server"
 	"log"
-	"mock-auth/config"
-	"mock-auth/server"
 	"os"
 	"os/signal"
 	"syscall"
