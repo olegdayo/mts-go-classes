@@ -1,6 +1,6 @@
 package server
 
 type User struct {
-	login    string
-	password string
+	Login    string `yaml:"login"`
+	Password string `yaml:"password"`
 }
