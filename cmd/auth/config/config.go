@@ -5,6 +5,10 @@ import (
 	"io/ioutil"
 )
 
+const (
+	PathToConfig = "cmd/auth/config/config.yaml"
+)
+
 type Server struct {
 	URL  string `yaml:"url"`
 	Port uint16 `yaml:"port"`
@@ -15,7 +19,7 @@ type Config struct {
 }
 
 func (c *Config) Init() error {
-	bytes, err := ioutil.ReadFile("config/config.yaml")
+	bytes, err := ioutil.ReadFile(PathToConfig)
 	if err != nil {
 		return err
 	}

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/offluck/mts-go-classes/config"
-	"github.com/offluck/mts-go-classes/server"
+	"github.com/offluck/mts-go-classes/cmd/auth/config"
+	"github.com/offluck/mts-go-classes/cmd/auth/server"
 	"log"
 	"os"
 	"os/signal"

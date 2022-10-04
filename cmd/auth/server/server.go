@@ -10,7 +10,9 @@ import (
 	"net/http"
 )
 
-const PathToUsersConfig = "server/users.yaml"
+const (
+	PathToUsers = "cmd/auth/server/users.yaml"
+)
 
 type Server struct {
 	http.Server
@@ -24,7 +26,7 @@ func NewServer(port uint16) (s *Server) {
 	s.Handler = setRouter()
 
 	s.Users = make(map[string]*User)
-	err := s.importUsers(PathToUsersConfig)
+	err := s.importUsers(PathToUsers)
 	if err != nil {
 		s.Users = make(map[string]*User)
 	}
