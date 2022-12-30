@@ -2,8 +2,9 @@ package config
 
 import (
 	"errors"
-	"github.com/profclems/go-dotenv"
 	"log"
+
+	"github.com/profclems/go-dotenv"
 )
 
 type Server struct {
