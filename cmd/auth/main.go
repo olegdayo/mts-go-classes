@@ -9,14 +9,21 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	//"github.com/offluck/mts-go-classes/cmd/auth/config"
-	//"github.com/offluck/mts-go-classes/cmd/auth/server"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func connectDB() {
-	//ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	//defer cancel()
-	//client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+func connectDB(url string) (*mongo.Client, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
 }
 
 func main() {
@@ -24,6 +31,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Cannot initialize config: %v\n", err)
 	}
+
+	client, err := connectDB(conf.DBURL)
+	if err != nil {
+		log.Fatalf("Cannot connect to database: %v\n", err)
+	}
+	log.Println(client)
 
 	s := server.NewServer(conf.Server.Port)
 	serverClose := make(chan os.Signal)
