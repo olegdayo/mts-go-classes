@@ -12,23 +12,31 @@ type Server struct {
 
 type Config struct {
 	Server *Server `yaml:"server"`
+	DBURL  string
 }
 
-func (c *Config) Init() error {
+func Init() (*Config, error) {
 	err := dotenv.LoadConfig()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	port := dotenv.GetInt("PORT")
-	if port == 0 {
-		return errors.New("cannot find PORT variable")
-	}
-
 	log.Printf("Port: %d\n", port)
-
-	c.Server = &Server{
-		Port: uint16(port),
+	if port == 0 {
+		return nil, errors.New("cannot find PORT variable")
 	}
-	return nil
+
+	dbURL := dotenv.GetString("DB_URL")
+	log.Printf("DB URL: %d\n", dbURL)
+	if dbURL == "" {
+		return nil, errors.New("cannot find MONGODB_URL variable")
+	}
+
+	return &Config{
+		Server: &Server{
+			Port: uint16(port),
+		},
+		DBURL: dbURL,
+	}, nil
 }
