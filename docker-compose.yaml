@@ -5,3 +5,16 @@ services:
     build: ./cmd/auth
     ports:
       - "8080:8080"
+
+  mongodb:
+    image: mongo:5.0
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - "mongo:/data/db"
+
+volumes:
+  mongo:
