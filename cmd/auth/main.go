@@ -17,7 +17,7 @@ func init() {
 	conf = new(config.Config)
 	err := conf.Init()
 	if err != nil {
-		log.Fatalf("Config error: %s\n", err.Error())
+		log.Fatalf("Cannot initialize config: %v\n", err)
 	}
 }
 

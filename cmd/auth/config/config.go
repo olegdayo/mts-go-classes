@@ -1,16 +1,12 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
-)
-
-const (
-	PathToConfig = "cmd/auth/config/config.yaml"
+	"errors"
+	"github.com/profclems/go-dotenv"
+	"log"
 )
 
 type Server struct {
-	URL  string `yaml:"url"`
 	Port uint16 `yaml:"port"`
 }
 
@@ -19,10 +15,20 @@ type Config struct {
 }
 
 func (c *Config) Init() error {
-	bytes, err := ioutil.ReadFile(PathToConfig)
+	err := dotenv.LoadConfig()
 	if err != nil {
 		return err
 	}
 
-	return yaml.Unmarshal(bytes, c)
+	port := dotenv.GetInt("PORT")
+	if port == 0 {
+		return errors.New("cannot find PORT variable")
+	}
+
+	log.Printf("Port: %d\n", port)
+
+	c.Server = &Server{
+		Port: uint16(port),
+	}
+	return nil
 }
