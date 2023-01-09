@@ -14,11 +14,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func connectDB(url string) (*mongo.Client, error) {
+func connectDB(uri string) (*mongo.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(url))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
@@ -32,11 +32,18 @@ func main() {
 		log.Fatalf("Cannot initialize config: %v\n", err)
 	}
 
-	client, err := connectDB(conf.DBURL)
+	client, err := connectDB(conf.DBURI)
+
 	if err != nil {
-		log.Fatalf("Cannot connect to database: %v\n", err)
+		log.Fatalf("Failed to connect to database: %v\n", err)
 	}
 	log.Println(client)
+
+	dbNames, err := client.ListDatabaseNames(context.Background(), nil)
+	if err != nil {
+		log.Fatalf("Failed to list database names: %v", err)
+	}
+	log.Println(dbNames)
 
 	s := server.NewServer(conf.Server.Port)
 	serverClose := make(chan os.Signal)
@@ -47,7 +54,7 @@ func main() {
 	<-serverClose
 	log.Println("Server stop")
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	err = s.Shutdown(shutdownCtx)

@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_URL=mongodb://mongo_username:mongo_password@mongodb
+      - DB_URI=mongodb://mongo_username:mongo_password@mongodb
 
   mongodb:
     image: mongo:5.0

@@ -1,5 +1,5 @@
 package server
 
-func checkAuth() {
-
+func checkAuth(username string, password string) (bool, error) {
+	return true, nil
 }
