@@ -27,10 +27,12 @@ func (s *Server) setRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
+	r.Get("/user/{id}", s.getUsers)
+	r.Get("/users", s.getUsers)
 	r.Get("/login", s.login)
 	r.Get("/verify", s.verify)
 
-	r.Post("/registration", s.signUp)
+	r.Post("/registration", s.registration)
 
 	return r
 }
