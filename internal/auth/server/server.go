@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 
@@ -11,23 +12,25 @@ import (
 
 type Server struct {
 	http.Server
+	DBClient *mongo.Client
 }
 
-func NewServer(port uint16) (s *Server) {
+func NewServer(port uint16, dbClient *mongo.Client) (s *Server) {
 	s = new(Server)
 	s.Addr = fmt.Sprintf(":%d", port)
-	s.Handler = setRouter()
+	s.Handler = s.setRouter()
+	s.DBClient = dbClient
 	return
 }
 
-func setRouter() *chi.Mux {
+func (s *Server) setRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/login", login)
-	r.Get("/verify", verify)
+	r.Get("/login", s.login)
+	r.Get("/verify", s.verify)
 
-	r.Post("/registration", signIn)
+	r.Post("/registration", s.signUp)
 
 	return r
 }

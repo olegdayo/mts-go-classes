@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/offluck/mts-go-classes/internal/auth/config"
 	"github.com/offluck/mts-go-classes/internal/auth/server"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"os"
 	"os/signal"
@@ -39,13 +40,13 @@ func main() {
 	}
 	log.Println(client)
 
-	dbNames, err := client.ListDatabaseNames(context.Background(), nil)
+	dbNames, err := client.ListDatabaseNames(context.TODO(), bson.D{})
 	if err != nil {
 		log.Fatalf("Failed to list database names: %v", err)
 	}
 	log.Println(dbNames)
-
-	s := server.NewServer(conf.Server.Port)
+	
+	s := server.NewServer(conf.Server.Port, client)
 	serverClose := make(chan os.Signal)
 	signal.Notify(serverClose, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 
