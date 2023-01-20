@@ -11,4 +11,9 @@ paths:
     get:
       tags:
         - status
-      description:
+      description: Checking if service is available
+      responses:
+        200:
+          description: OK
+      produces:
+        - "plain/text"
