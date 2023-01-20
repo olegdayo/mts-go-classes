@@ -64,7 +64,6 @@ func (s *Server) registration(w http.ResponseWriter, r *http.Request) {
 		User{
 			Username: username,
 			Password: password,
-			Deleted:  false,
 		},
 	)
 	if err != nil {
@@ -135,6 +134,7 @@ func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 	log.Printf("Username: %s", username)
+
 	user := new(User)
 	err := s.DBClient.Database("users").Collection("users").FindOne(context.Background(), bson.M{"username": username}).Decode(user)
 	if err != nil {
@@ -176,6 +176,14 @@ func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+	log.Printf("Username: %s", username)
+	s.DBClient.Database("users").Collection("users").FindOneAndDelete(context.Background(), bson.M{"username": username})
+	writeWrapper(
+		http.StatusNoContent,
+		makeMessageResponse(fmt.Sprintf("successfully deleted the user: %s", username), nil),
+		w,
+	)
 }
 
 func (s *Server) getUsers(w http.ResponseWriter, r *http.Request) {
