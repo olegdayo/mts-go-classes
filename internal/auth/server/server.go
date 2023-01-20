@@ -27,8 +27,12 @@ func (s *Server) setRouter() *chi.Mux {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 
-	r.Get("/user/{id}", s.getUsers)
 	r.Get("/users", s.getUsers)
+	r.Route("/user", func(r chi.Router) {
+		r.Get("/{username}", s.getUser)
+		r.Put("/{username}", s.updateUser)
+		r.Delete("/{username}", s.deleteUser)
+	})
 
 	r.Get("/login", s.login)
 	r.Get("/verify", s.verify)

@@ -3,20 +3,29 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"net/http"
 )
 
-func writeWrapper(status int, responseMessage []byte, logMessage string, w http.ResponseWriter) {
-	log.Printf("%s: %d", logMessage, status)
+func writeWrapper(status int, message string, w http.ResponseWriter) {
+	log.Printf("%s: %d", message, status)
 	w.WriteHeader(status)
-	_, err := w.Write(responseMessage)
+	_, err := w.Write([]byte(message))
 	if err != nil {
 		log.Printf("Failed to write: %s\n", err.Error())
 	}
+}
+
+func makeMessageResponse(message string, err error) string {
+	if err != nil {
+		return fmt.Sprintf(`{"error": "%s: %v"}`, message, err)
+	}
+	return fmt.Sprintf(`{"success": "%s"}`, message)
 }
 
 func (s *Server) registration(w http.ResponseWriter, r *http.Request) {
@@ -24,33 +33,63 @@ func (s *Server) registration(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		writeWrapper(http.StatusBadRequest, []byte("username and password should not be empty"), "Login and password cannot be empty, status code", w)
+		writeWrapper(
+			http.StatusBadRequest,
+			makeMessageResponse("login and password cannot be empty", errors.New("empty data")),
+			w,
+		)
 		return
 	}
 
 	exists, err := s.doesUserExist(username)
 	if err != nil {
-		writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "Error during user existence check", w)
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("error during user existence check", err),
+			w,
+		)
 		return
 	}
 	if exists {
-		writeWrapper(http.StatusForbidden, []byte("User already exists"), "Failed to insert because such user already exists", w)
+		writeWrapper(
+			http.StatusForbidden,
+			makeMessageResponse("user already exists", errors.New("user duplicate")),
+			w,
+		)
 		return
 	}
 
-	_, err = s.DBClient.Database("users").Collection("users").InsertOne(context.Background(), User{username, password})
+	_, err = s.DBClient.Database("users").Collection("users").InsertOne(
+		context.Background(),
+		User{
+			Username: username,
+			Password: password,
+			Deleted:  false,
+		},
+	)
 	if err != nil {
-		writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "Failed to execute DB query", w)
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("failed to execute DB query", err),
+			w,
+		)
 	}
 
-	writeWrapper(http.StatusCreated, []byte(fmt.Sprintf("Operation was successful, username: %s", username)), fmt.Sprintf("Operation was successful, username: %s", username), w)
+	writeWrapper(
+		http.StatusCreated,
+		makeMessageResponse(fmt.Sprintf("operation was successful, username: %s", username), nil),
+		w,
+	)
 }
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		writeWrapper(http.StatusForbidden, []byte(fmt.Sprintf("%d, %s", http.StatusForbidden, "Forbidden")), "Cannot auth", w)
-		log.Printf("Forbidden to login, status code: %d", http.StatusForbidden)
+		writeWrapper(
+			http.StatusForbidden,
+			makeMessageResponse("cannot use basic auth", errors.New("basic auth error")),
+			w,
+		)
 		return
 	}
 
@@ -58,46 +97,123 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	err := s.DBClient.Database("users").Collection("users").FindOne(context.Background(), bson.M{"username": username}).Decode(user)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
-			writeWrapper(http.StatusForbidden, []byte(err.Error()), "User does not exist", w)
+			writeWrapper(
+				http.StatusForbidden,
+				makeMessageResponse("user does not exist", err),
+				w,
+			)
 			return
 		}
-		writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "Error during user existence check", w)
+
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("error during user existence check", err),
+			w,
+		)
 		return
 	}
 
 	if password != user.Password {
-		writeWrapper(http.StatusForbidden, []byte("Wrong password"), "Wrong password", w)
+		writeWrapper(
+			http.StatusForbidden,
+			makeMessageResponse("wrong password", errors.New("wrong password")),
+			w,
+		)
 		return
 	}
 
-	writeWrapper(http.StatusOK, []byte("Logged in"), "Logged in", w)
+	writeWrapper(
+		http.StatusOK,
+		makeMessageResponse("successfully logged in", nil),
+		w,
+	)
 }
 
 func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+	username := chi.URLParam(r, "username")
+	log.Printf("Username: %s", username)
+	user := new(User)
+	err := s.DBClient.Database("users").Collection("users").FindOne(context.Background(), bson.M{"username": username}).Decode(user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			writeWrapper(
+				http.StatusForbidden,
+				makeMessageResponse("user not found", errors.New("no such user")),
+				w,
+			)
+			return
+		}
+
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("error during decoding", err),
+			w,
+		)
+		return
+	}
+
+	byteUser, err := json.Marshal(user)
+	if err != nil {
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("error during decoding", err),
+			w,
+		)
+		return
+	}
+
+	writeWrapper(
+		http.StatusOK,
+		string(byteUser),
+		w,
+	)
+}
+
+func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
+}
+
+func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getUsers(w http.ResponseWriter, r *http.Request) {
 	users := make([]*User, 0)
 	coll, err := s.DBClient.Database("users").Collection("users").Find(context.Background(), bson.M{})
 	if err != nil {
-		writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "failed to execute users query", w)
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("failed to execute users query", err),
+			w,
+		)
 	}
 
-	user := new(User)
 	for coll.Next(context.TODO()) {
+		user := new(User)
 		err = coll.Decode(user)
 		if err != nil {
-			writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "failed to decode users", w)
+			writeWrapper(
+				http.StatusInternalServerError,
+				makeMessageResponse("failed to decode users", err),
+				w,
+			)
 		}
 		users = append(users, user)
 	}
 
 	byteUsers, err := json.Marshal(users)
 	if err != nil {
-		writeWrapper(http.StatusInternalServerError, []byte(err.Error()), "failed to encode users", w)
+		writeWrapper(
+			http.StatusInternalServerError,
+			makeMessageResponse("failed to encode users", err),
+			w,
+		)
 	}
-	writeWrapper(http.StatusOK, byteUsers, "sent users", w)
+
+	writeWrapper(
+		http.StatusOK,
+		string(byteUsers),
+		w,
+	)
 }
