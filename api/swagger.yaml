@@ -17,3 +17,30 @@ paths:
           description: OK
       produces:
         - "plain/text"
+
+  /users:
+    get:
+      tags:
+        - status
+      description: Getting all users
+      responses:
+        200:
+          description: OK
+        500:
+          description: DB or encoding error
+      produces:
+        - "application/json"
+
+  /user:
+    get:
+    put:
+    delete:
+
+  /registration:
+    post:
+
+  /login:
+    get:
+
+  /verify:
+    get:
