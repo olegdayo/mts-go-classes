@@ -21,7 +21,7 @@ paths:
   /users:
     get:
       tags:
-        - status
+        - users
       description: Getting all users
       responses:
         200:
@@ -33,14 +33,44 @@ paths:
 
   /user:
     get:
+      tags:
+        - users
     put:
+      tags:
+        - users
     delete:
+      tags:
+        - users
 
   /registration:
     post:
+      tags:
+        - users
+      description: Register a new user
+      parameters:
+        - name: username
+          in: query
+          description: user's username
+          required: true
+          type: string
+        - name: password
+          in: query
+          description: user's password
+          required: true
+          type: string
+      responses:
+        200:
+        400:
+        403:
+        500:
+
 
   /login:
     get:
+      tags:
+        - users
 
   /verify:
     get:
+      tags:
+        - users
