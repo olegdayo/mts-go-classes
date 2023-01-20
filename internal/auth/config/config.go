@@ -29,7 +29,7 @@ func Init() (*Config, error) {
 	}
 
 	dbURI := dotenv.GetString("DB_URI")
-	log.Printf("DB URI: %d\n", dbURI)
+	log.Printf("DB URI: %s\n", dbURI)
 	if dbURI == "" {
 		return nil, errors.New("cannot find MONGODB_URI variable")
 	}

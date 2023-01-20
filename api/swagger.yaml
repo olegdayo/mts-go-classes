@@ -1,0 +1,14 @@
+---
+
+swagger: "2.0"
+info:
+  version: "1.0"
+  title: mts-go-classes-app
+  description: API documentation for MTS Go Classes final task
+
+paths:
+  /ping:
+    get:
+      tags:
+        - status
+      description:

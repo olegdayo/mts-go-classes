@@ -28,7 +28,15 @@ func makeMessageResponse(message string, err error) string {
 	return fmt.Sprintf(`{"success": "%s"}`, message)
 }
 
-func (s *Server) registration(w http.ResponseWriter, r *http.Request) {
+func connectionCheckHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write([]byte("pong"))
+	if err != nil {
+		log.Printf("Failed to write test response")
+	}
+}
+
+func (s *Server) registrationHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
@@ -81,7 +89,7 @@ func (s *Server) registration(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (s *Server) login(w http.ResponseWriter, r *http.Request) {
+func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		writeWrapper(
@@ -128,10 +136,11 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (s *Server) verify(w http.ResponseWriter, r *http.Request) {
+func (s *Server) verifyHandler(w http.ResponseWriter, r *http.Request) {
+	s.loginHandler(w, r)
 }
 
-func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getUserHandler(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 	log.Printf("Username: %s", username)
 
@@ -172,10 +181,28 @@ func (s *Server) getUser(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (s *Server) updateUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	oldUsername := chi.URLParam(r, "username")
+	newUsername := r.FormValue("username")
+	newPassword := r.FormValue("password")
+
+	s.DBClient.Database("users").Collection("users").FindOneAndReplace(
+		context.Background(),
+		bson.M{"username": oldUsername},
+		bson.M{
+			"username": newUsername,
+			"password": newPassword,
+		},
+	)
+
+	writeWrapper(
+		http.StatusOK,
+		makeMessageResponse(fmt.Sprintf("successfully updated user: %s", oldUsername), nil),
+		w,
+	)
 }
 
-func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
+func (s *Server) deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	username := chi.URLParam(r, "username")
 	log.Printf("Username: %s", username)
 	s.DBClient.Database("users").Collection("users").FindOneAndDelete(context.Background(), bson.M{"username": username})
@@ -186,7 +213,7 @@ func (s *Server) deleteUser(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func (s *Server) getUsers(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users := make([]*User, 0)
 	coll, err := s.DBClient.Database("users").Collection("users").Find(context.Background(), bson.M{})
 	if err != nil {

@@ -1,0 +1,9 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: golang:1.9.2
+  before_script:
+  script:
+    - go build -o hello
