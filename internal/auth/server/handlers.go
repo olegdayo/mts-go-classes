@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/offluck/mts-go-classes/internal/auth/encryption"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
@@ -38,7 +39,7 @@ func connectionCheckHandler(w http.ResponseWriter, _ *http.Request) {
 
 func (s *Server) registrationHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
-	password := r.FormValue("password")
+	password := encryption.MakeHash(r.FormValue("password"))
 
 	if username == "" || password == "" {
 		writeWrapper(
@@ -120,7 +121,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if password != user.Password {
+	if encryption.MakeHash(password) != user.Password {
 		writeWrapper(
 			http.StatusForbidden,
 			makeMessageResponse("wrong password", errors.New("wrong password")),
@@ -184,7 +185,7 @@ func (s *Server) getUserHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	oldUsername := chi.URLParam(r, "username")
 	newUsername := r.FormValue("username")
-	newPassword := r.FormValue("password")
+	newPassword := encryption.MakeHash(r.FormValue("password"))
 
 	s.DBClient.Database("users").Collection("users").FindOneAndReplace(
 		context.Background(),

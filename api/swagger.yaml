@@ -1,10 +1,12 @@
 ---
 
+
 swagger: "2.0"
 info:
   version: "1.0"
   title: mts-go-classes-app
   description: API documentation for MTS Go Classes final task
+
 
 paths:
   /ping:
@@ -17,6 +19,7 @@ paths:
           description: OK
       produces:
         - "plain/text"
+
 
   /users:
     get:
@@ -31,16 +34,77 @@ paths:
       produces:
         - "application/json"
 
+
   /user:
     get:
       tags:
         - users
+      description: Gets user info by username
+      parameters:
+        - name: username
+          in: path
+          description: User's username
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        403:
+          description: User does not exist
+        500:
+          description: DB or encoding error
+      produces:
+        - "application/json"
+
     put:
       tags:
         - users
+      description: Updates chosen user's info
+      parameters:
+        - name: username
+          in: path
+          description: User's old username
+          required: true
+          type: string
+        - name: username
+          in: query
+          description: User's new username
+          required: true
+          type: string
+        - name: password
+          in: query
+          description: User's new password
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        403:
+          description: User does not exist
+        500:
+          description: DB or encoding error
+      produces:
+        - "application/json"
+
     delete:
       tags:
         - users
+      description: Deletes chosen user
+      parameters:
+        - name: username
+          in: path
+          description: User's username
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        403:
+          description: User does not exist
+        500:
+          description: DB or encoding error
+      produces:
+        - "application/json"
 
   /registration:
     post:
@@ -50,27 +114,76 @@ paths:
       parameters:
         - name: username
           in: query
-          description: user's username
+          description: User's username
           required: true
           type: string
         - name: password
           in: query
-          description: user's password
+          description: User's password
           required: true
           type: string
       responses:
         200:
+          description: OK
         400:
+          description: Empty login or password
         403:
+          description: Trying to use same login as an existing user
         500:
+          description: Internal server error
+      produces:
+        - "application/json"
 
 
   /login:
     get:
       tags:
         - users
+      description: Checks username and password
+      parameters:
+        - name: username
+          in: header
+          description: user's username
+          required: true
+          type: string
+        - name: password
+          in: header
+          description: user's password
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        403:
+          description: Wrong login or password
+        500:
+          description: DB error
+      produces:
+        - "application/json"
+
 
   /verify:
     get:
       tags:
         - users
+      description: Checks username and password
+      parameters:
+        - name: username
+          in: header
+          description: user's username
+          required: true
+          type: string
+        - name: password
+          in: header
+          description: user's password
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+        403:
+          description: Wrong login or password
+        500:
+          description: DB error
+      produces:
+        - "application/json"
