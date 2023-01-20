@@ -29,6 +29,7 @@ func (s *Server) setRouter() *chi.Mux {
 
 	r.Get("/user/{id}", s.getUsers)
 	r.Get("/users", s.getUsers)
+
 	r.Get("/login", s.login)
 	r.Get("/verify", s.verify)
 
